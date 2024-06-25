@@ -1,13 +1,15 @@
 import pandas as pd
 import numpy as np
 
+# Market data 5 min candles, then I try SMA10 (50 min), SMA100 (500min)
+
 def identify_market_phases(data):
-    data['SMA50'] = data['close'].rolling(window=50).mean()
-    data['SMA200'] = data['close'].rolling(window=200).mean()
+    data['SMA10'] = data['close'].rolling(window=10).mean()
+    data['SMA50'] = data['close'].rolling(window=100).mean()
     
     conditions = [
-        (data['SMA50'] > data['SMA200']),  # Uptrend (Markup)
-        (data['SMA50'] < data['SMA200'])   # Downtrend (Markdown)
+        (data['SMA10'] > data['SMA100']),  # Uptrend (Markup)
+        (data['SMA10'] < data['SMA100'])   # Downtrend (Markdown)
     ]
     choices = ['markup', 'markdown']
     data['phase'] = np.select(conditions, choices, default='neutral')
@@ -28,15 +30,15 @@ def identify_support_resistance(data, window=20):
 
 def determine_limit_price(data):
     support, resistance = identify_support_resistance(data)
-    sma50, sma200 = data['SMA50'].iloc[-1], data['SMA200'].iloc[-1]
+    sma10, sma100 = data['SMA10'].iloc[-1], data['SMA100'].iloc[-1]
 
     # Determine limit price based on support/resistance and moving averages
-    if data['close'].iloc[-1] < sma50:
-        limit_price = support  # Buy at support level if below SMA50
-    elif data['close'].iloc[-1] > sma200:
-        limit_price = resistance  # Sell at resistance level if above SMA200
+    if data['close'].iloc[-1] < sma10:
+        limit_price = support  # Buy at support level if below SMA10
+    elif data['close'].iloc[-1] > sma100:
+        limit_price = resistance  # Sell at resistance level if above SMA100
     else:
-        limit_price = sma50  # Use SMA50 as a fallback
+        limit_price = sma10  # Use SMA10 as a fallback
 
     return limit_price
 
