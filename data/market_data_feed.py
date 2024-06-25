@@ -69,10 +69,13 @@ class MarketDataFeed:
 
     def store_data(self, data, table_name):
         file_path = self.get_csv_path(table_name)
-        if os.path.exists(file_path):
-            data.to_csv(file_path, mode="a", header=False, index=False)
-        else:
-            data.to_csv(file_path, mode="w", header=True, index=False)
+        lock = FileLock(file_path + ".lock")
+
+        with lock:
+            if os.path.exists(file_path):
+                data.to_csv(file_path, mode="a", header=False, index=False)
+            else:
+                data.to_csv(file_path, mode="w", header=True, index=False)
 
     async def update_market_data(self):
         async with AsyncExchangeManager(self.api_key, self.api_secret) as exchange:
