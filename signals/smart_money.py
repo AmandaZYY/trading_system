@@ -4,6 +4,7 @@ from filelock import FileLock
 from datetime import datetime, timezone
 
 # Market data 5 min candles, then I try SMA10 (50 min), SMA100 (500min)
+# TO-DO: Add cache to optimize memory usage
 
 
 def get_csv_path(data_dir):
