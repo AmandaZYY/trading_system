@@ -15,9 +15,28 @@ class CoinbaseBroker(Broker):
     def get_account_balance(self):
         return self.client.fetch_balance()
 
-    def place_order(self, symbol, quantity, side, price=None):
-        order_type = "limit" if price is not None else "market"
-        order = self.client.create_order(symbol, order_type, side, quantity, price)
+    def get_orderbook_data(self, symbol):
+        order_book = self.client.fetch_order_book(symbol)
+        return {
+            "best_bid": (
+                order_book["bids"][0][0] if len(order_book["bids"]) > 0 else None
+            ),
+            "best_bid_size": (
+                order_book["bids"][0][1] if len(order_book["bids"]) > 0 else None
+            ),
+            "best_offer": (
+                order_book["asks"][0][0] if len(order_book["asks"]) > 0 else None
+            ),
+            "best_offer_size": (
+                order_book["asks"][0][1] if len(order_book["asks"]) > 0 else None
+            ),
+        }
+
+    def place_order(self, symbol, order_type, amount, side, price=None):
+        if order_type == "limit":
+            order = self.client.create_limit_order(symbol, side, amount, price)
+        else:
+            order = self.client.create_market_order(symbol, side, amount)
         return order
 
     def cancel_order(self, order_id):

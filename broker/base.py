@@ -7,7 +7,10 @@ class Broker:
     def get_account_balance(self):
         raise NotImplementedError
 
-    def place_order(self, symbol, quantity, side):
+    def get_orderbook_data(self, symbol):
+        raise NotImplementedError
+
+    def place_order(self, symbol, order_type, amount, side):
         raise NotImplementedError
 
     def cancel_order(self, order_id):
