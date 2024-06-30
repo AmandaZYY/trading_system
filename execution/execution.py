@@ -22,30 +22,31 @@ class ExecutionAlgo:
         while True:
             current_time = time.time()
             elapsed_time = current_time - start_time
-            market_data = self.broker.get_orderbook_data(self.symbol)
+            bookdata = self.broker.get_orderbook_data(self.symbol)
 
             if mode == "Passive":
                 if (
                     (elapsed_time > self.passive_time_limit)
-                    or self.is_adverse_price_move(trade, market_data)
-                    or self.is_order_imbalance(trade, market_data)
+                    or self.is_adverse_price_move(trade, bookdata)
+                    or self.is_order_imbalance(trade, bookdata)
                 ):
                     mode = self.switch_to_aggressive(order_id)
                 else:
-                    order_id = self.place_limit_order(trade, market_data)
+                    order_id = self.place_limit_order(trade, bookdata)
 
             elif mode == "Aggressive":
                 if elapsed_time > self.total_time_limit:
                     self.broker.cancel_order(order_id)
                     break
-                elif self.is_further_adverse_price_move(trade, market_data):
-                    order_id = self.update_limit_order(trade, order_id, market_data)
+                elif self.is_further_adverse_price_move(trade, bookdata):
+                    order_id = self.update_limit_order(trade, order_id, bookdata)
 
             time.sleep(1)  # Sleep for a while before the next tick
 
-    def place_limit_order(self, trade, market_data):
+    def place_limit_order(self, trade, bookdata):
+        # TO-DO: handle missing data
         limit_price = (
-            market_data["best_bid"] if trade > 0 else market_data["best_offer"]
+            bookdata["best_bid"] if trade > 0 else bookdata["best_offer"]
         )
         side = "buy" if trade > 0 else "sell"
         amount = abs(trade)
@@ -56,9 +57,9 @@ class ExecutionAlgo:
         print(f"Switching to aggressive mode for order {order_id}")
         return "Aggressive"
 
-    def update_limit_order(self, trade, order_id, market_data):
+    def update_limit_order(self, trade, order_id, bookdata):
         new_limit_price = (
-            market_data["best_offer"] if trade > 0 else market_data["best_bid"]
+            bookdata["best_offer"] if trade > 0 else bookdata["best_bid"]
         )
         side = "buy" if trade > 0 else "sell"
         amount = abs(trade)
@@ -68,26 +69,26 @@ class ExecutionAlgo:
         )
         return order["id"]
 
-    def is_adverse_price_move(self, trade, market_data):
+    def is_adverse_price_move(self, trade, bookdata):
         if trade > 0:
-            return market_data["best_offer"] > market_data["best_bid"]
+            return bookdata["best_offer"] > bookdata["best_bid"]
         else:
-            return market_data["best_bid"] < market_data["best_offer"]
+            return bookdata["best_bid"] < bookdata["best_offer"]
 
-    def is_further_adverse_price_move(self, trade, market_data):
+    def is_further_adverse_price_move(self, trade, bookdata):
         if trade > 0:
-            return market_data["best_offer"] > market_data["best_bid"]
+            return bookdata["best_offer"] > bookdata["best_bid"]
         else:
-            return market_data["best_bid"] < market_data["best_offer"]
+            return bookdata["best_bid"] < bookdata["best_offer"]
 
-    def is_order_imbalance(self, trade, market_data):
+    def is_order_imbalance(self, trade, bookdata):
         if trade > 0:
             return (
-                market_data["best_offer_size"] / market_data["best_bid_size"]
+                bookdata["best_offer_size"] / bookdata["best_bid_size"]
                 > self.max_imbalance
             )
         else:
             return (
-                market_data["best_bid_size"] / market_data["best_offer_size"]
+                bookdata["best_bid_size"] / bookdata["best_offer_size"]
                 > self.max_imbalance
             )

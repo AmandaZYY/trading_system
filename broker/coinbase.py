@@ -16,6 +16,9 @@ class CoinbaseBroker(Broker):
         return self.client.fetch_balance()
 
     def get_orderbook_data(self, symbol):
+        """ 
+        Get orderbook data for one symbol at a time
+        """
         order_book = self.client.fetch_order_book(symbol)
         return {
             "best_bid": (

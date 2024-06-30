@@ -1,8 +1,8 @@
 class Broker:
-    def __init__(self, api_key, api_secret, api_passphrase):
+    def __init__(self, api_key, api_secret):
         self.api_key = api_key
         self.api_secret = api_secret
-        self.api_passphrase = api_passphrase
+        # self.api_passphrase = api_passphrase
 
     def get_account_balance(self):
         raise NotImplementedError

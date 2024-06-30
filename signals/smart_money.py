@@ -4,7 +4,7 @@ from filelock import FileLock
 from datetime import datetime, timezone
 
 # Market data 5 min candles, then I try SMA10 (50 min), SMA100 (500min)
-# TO-DO: Add cache to optimize memory usage
+# TO-DO: Add cache to optimize memory usage; Handle exceptions when market data unavailble 
 
 
 def get_csv_path(data_dir):
@@ -69,17 +69,38 @@ def determine_limit_price(data):
 def generate_signals(data):
     data = identify_market_phases(data)
     data = detect_volume_spikes(data)
-
+    data = data.reset_index()  # make sure indexes pair with number of rows
+    
     signals = []
 
-    for i in range(1, len(data)):
-        if data["phase"].iloc[i] == "markup" and data["volume_spike"].iloc[i] == 1:
+    for i, row in data.iterrows():
+        if row["phase"] == "markup" and row["volume_spike"] == 1:
             limit_price = determine_limit_price(data[: i + 1])
-            signals.append((data["timestamp"].iloc[i], "buy", limit_price))
+            signals.append((row["timestamp"], row["symbol"], "buy", limit_price))
         elif data["phase"].iloc[i] == "markdown" and data["volume_spike"].iloc[i] == 1:
             limit_price = determine_limit_price(data[: i + 1])
-            signals.append((data["timestamp"].iloc[i], "sell", limit_price))
+            signals.append((row["timestamp"], row["symbol"], "sell", limit_price))
 
-    signals_df = pd.DataFrame(signals, columns=["timestamp", "signal", "price"])
+    signals_df = pd.DataFrame(signals, columns=["timestamp", "symbol", "signal", "price"])
 
     return data, signals_df
+
+
+def calculate_atr(data, period=14):
+    """
+    Calculate the Average True Range (ATR) for given data.
+
+    :param data: DataFrame with columns 'High', 'Low', 'Close'
+    :param period: The period over which to calculate the ATR
+    :return: DataFrame with ATR values
+    """
+    data['High-Low'] = data['High'] - data['Low']
+    data['High-PrevClose'] = abs(data['High'] - data['Close'].shift(1))
+    data['Low-PrevClose'] = abs(data['Low'] - data['Close'].shift(1))
+
+    true_range = data[['High-Low', 'High-PrevClose', 'Low-PrevClose']].max(axis=1)
+
+    atr = true_range.rolling(window=period, min_periods=1).mean()
+
+    data['ATR'] = atr
+    return data
