@@ -3,6 +3,7 @@ from .smart_money import (
     detect_volume_spikes,
     generate_signals,
     load_data,
+    calculate_atr,
 )
 
 __all__ = [
@@ -10,4 +11,5 @@ __all__ = [
     "detect_volume_spikes",
     "generate_signals",
     "load_data",
+    "calculate_atr",
 ]

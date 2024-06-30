@@ -3,7 +3,9 @@
 from data import MarketDataFeed
 import asyncio
 import signal
-from config.settings import API_KEY, API_SECRET, DATA_DIR
+from config.dontshare_settings import API_KEY, API_SECRET, DATA_DIR
+
+#TO-DO: add check and retry for stopping the process
 
 if __name__ == "__main__":
     symbols = ["BTC/USD", "ETH/USD"]

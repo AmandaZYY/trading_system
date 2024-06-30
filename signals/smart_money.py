@@ -94,13 +94,15 @@ def calculate_atr(data, period=14):
     :param period: The period over which to calculate the ATR
     :return: DataFrame with ATR values
     """
-    data['High-Low'] = data['High'] - data['Low']
-    data['High-PrevClose'] = abs(data['High'] - data['Close'].shift(1))
-    data['Low-PrevClose'] = abs(data['Low'] - data['Close'].shift(1))
+    # TO-DO: handle NAN open/close value, especially previous close
+    data['high-low'] = data['high'] - data['low']
+    data['high-prevclose'] = abs(data['high'] - data['close'].shift(1))
+    data['low-prevclose'] = abs(data['low'] - data['close'].shift(1))
 
-    true_range = data[['High-Low', 'High-PrevClose', 'Low-PrevClose']].max(axis=1)
+    true_range = data[['high-low', 'high-prevclose', 'low-prevclose']].max(axis=1)
 
     atr = true_range.rolling(window=period, min_periods=1).mean()
 
-    data['ATR'] = atr
-    return data
+    data['atr'] = atr
+    atr_df = pd.DataFrame(data, columns=["timestamp", "symbol", "atr"])
+    return data, atr_df

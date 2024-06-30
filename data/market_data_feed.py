@@ -33,6 +33,7 @@ class MarketDataFeed:
         self.data_dir = data_dir
         self.last_timestamps = {symbol: None for symbol in self.symbols}
         self.running = True
+        self.exchange = AsyncExchangeManager(self.api_key, self.api_secret)
 
         if not os.path.exists(data_dir):
             os.makedirs(data_dir)
@@ -78,7 +79,7 @@ class MarketDataFeed:
                 data.to_csv(file_path, mode="w", header=True, index=False)
 
     async def update_market_data(self):
-        async with AsyncExchangeManager(self.api_key, self.api_secret) as exchange:
+        async with self.exchange as exchange:
             tasks = [self.fetch_ohlcv(exchange, symbol) for symbol in self.symbols]
             results = await asyncio.gather(*tasks)
             all_data = pd.concat(results)
